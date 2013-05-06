@@ -1,0 +1,7 @@
+# Builds & binaries
+build/
+bin/
+
+# Tmp files
+*~
+*#

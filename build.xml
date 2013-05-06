@@ -1,0 +1,178 @@
+<project name="KMap" default="dist" basedir=".">
+    <property environment="env"/>
+    <property file="build.properties"/>
+
+    <property name="mod.version" value="UNKNOWN"/>
+    <property name="mod.name" value="ItemRender"/>
+    <property name="mod.modid" value="itemrender"/>
+
+    <property name="minecraft.version" value="1.5.1"/>
+
+    <property name="forge.build" value="682"/>
+    <property name="forge.version" value="7.7.2"/>
+    <property name="forge.filename" value="minecraftforge-src-${minecraft.version}-${forge.version}.${forge.build}.zip"/>
+
+    <property name="forge.download" value="http://files.minecraftforge.net/minecraftforge/${forge.filename}"/>
+
+    <property name="build.dir" value="build"/>
+    <property name="forge.dir" value="${build.dir}/forge"/>
+
+    <property file="${forge.dir}/forgeversion.properties"/>
+    <condition property="forge.installed">
+        <equals arg1="${forge.build.number}" arg2="${forge.build}"/>
+    </condition>
+
+    <property name="temp.dir" value="${build.dir}/temp"/>
+    <property name="src.orig.dir" value="src"/>
+    <property name="src.dir" value="${build.dir}/src_filtered"/>
+    <property name="mcp.dir" value="${forge.dir}/mcp"/>
+    <property name="mcp.mappings.dir" value="${forge.dir}/mcp/conf"/>
+    <property name="class.dir" value="${build.dir}/classes"/>
+
+    <property name="specialsource.jar" value="SpecialSource-1.5-SNAPSHOT-shaded.jar"/>
+
+    <property name="minecraft.inheritance" value="${temp.dir}/Minecraft-${minecraft.version}-mcp.inheritance"/>
+
+    <property name="minecraft.mcp.jar" value="${temp.dir}/Minecraft-${minecraft.version}-mcp.jar"/>
+
+    <property name="mod.mcp.jar" value="${build.dir}/out/${mod.name}-${mod.version}.mcp.jar"/>
+    <property name="mod.src.jar" value="${build.dir}/out/${mod.name}-${mod.version}.src.jar"/>
+    <property name="mod.jar" value="${build.dir}/out/${mod.name}-${mod.version}.jar"/>
+
+    <condition property="minecraft.inheritance.exists">
+        <available file="${minecraft.inheritance}"/>
+    </condition>
+
+    <condition property="minecraft.jar.exists">
+        <available file="${minecraft.mcp.jar}"/>
+    </condition>
+
+    <path id="mod.classpath">
+        <pathelement location="${mcp.dir}/bin/minecraft"/>
+        <pathelement location="${mcp.dir}/lib/argo-3.2.jar"/>
+        <pathelement location="${mcp.dir}/lib/asm-all-4.1.jar"/>
+        <pathelement location="${mcp.dir}/lib/bcprov-jdk15on-148.jar"/>
+        <pathelement location="${mcp.dir}/lib/guava-14.0-rc3.jar"/>
+        <pathelement location="${mcp.dir}/jars/bin/jinput.jar"/>
+        <pathelement location="${mcp.dir}/jars/bin/lwjgl.jar"/>
+        <pathelement location="${mcp.dir}/jars/bin/lwjgl_util.jar"/>
+    </path>
+
+    <target name="dist" depends="reobf-mod, sign-mod, jar-src"/>
+
+    <target name="sign-mod" depends="reobf-mod" if="${signature.enable}">
+        <signjar jar="${mod.jar}" alias="${signature.alias}" storepass="${signature.storepass}"
+                 keypass="${signature.keypass}"/>
+    </target>
+
+    <target name="reobf-mod" depends="jar-mod, build-minecraft-inheritance">
+        <mkdir dir="${build.dir}/out"/>
+        <java jar="${specialsource.jar}" fork="true">
+            <arg value="--srg-in"/>
+            <arg value="${mcp.mappings.dir}"/>
+            <arg value="--in-jar"/>
+            <arg value="${mod.mcp.jar}"/>
+            <arg value="--out-jar"/>
+            <arg value="${mod.jar}"/>
+            <arg value="--numeric-srg"/>
+            <arg value="--read-inheritance"/>
+            <arg value="${minecraft.inheritance}"/>
+            <arg value="--live"/>
+            <arg value="--quiet"/>
+        </java>
+    </target>
+
+    <target name="jar-src">
+        <delete file="${mod.src.jar}" failonerror="no"/>
+        <jar destfile="${mod.src.jar}">
+            <fileset dir="." includes="${src.orig.dir}/**"/>
+            <file file="build.xml"/>
+            <file file="SpecialSource-1.5-SNAPSHOT-shaded.jar"/>
+            <file file="SpecialSource-License.txt"/>
+        </jar>
+    </target>
+
+    <target name="jar-mod" depends="build-mod">
+        <propertyfile file="${temp.dir}/version.properties">
+            <entry key="${mod.modid}.version" value="${mod.version}"/>
+        </propertyfile>
+        <delete file="${mod.mcp.jar}" failonerror="no"/>
+        <jar destfile="${mod.mcp.jar}">
+            <fileset dir="${class.dir}"/>
+            <fileset dir="${src.dir}" excludes="**/*.java"/>
+            <file file="${temp.dir}/version.properties"/>
+        </jar>
+    </target>
+
+    <target name="build-mod" depends="install-forge, filter-src">
+        <delete dir="${class.dir}" failonerror="no"/>
+        <mkdir dir="${class.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${class.dir}" target="1.6" source="1.6"
+                classpathref="mod.classpath" debug="true" debuglevel="lines,source" includeAntRuntime="false"/>
+    </target>
+
+    <target name="filter-src">
+        <delete dir="${src.dir}" failonerror="no"/>
+        <mkdir dir="${src.dir}"/>
+        <copy todir="${src.dir}">
+            <fileset dir="${src.orig.dir}" excludes="**/*.png"/>
+            <filterset>
+                <filter token="MODID" value="${mod.modid}"/>
+                <filter token="MODID" value="${mod.modid}"/>
+                <filter token="VERSION" value="${mod.version}"/>
+                <filter token="MCVERSION" value="${minecraft.version}"/>
+            </filterset>
+        </copy>
+        <copy todir="${src.dir}">
+            <fileset dir="${src.orig.dir}" includes="**/*.png"/>
+        </copy>
+    </target>
+
+    <target name="build-minecraft-inheritance" depends="jar-minecraft" unless="minecraft.inheritance.exists">
+        <java jar="${specialsource.jar}" fork="true" classpath="">
+            <arg value="--srg-in"/>
+            <arg value="${mcp.mappings.dir}"/>
+            <arg value="--write-inheritance"/>
+            <arg value="${minecraft.inheritance}"/>
+            <arg value="--in-jar"/>
+            <arg value="${minecraft.mcp.jar}"/>
+            <arg value="--out-jar"/>
+            <arg value="${minecraft.mcp.jar}.temp"/>
+            <arg value="--numeric-srg"/>
+            <arg value="--live"/>
+            <arg value="--quiet"/>
+        </java>
+    </target>
+
+    <target name="jar-minecraft" depends="install-forge" unless="minecraft.jar.exists">
+        <jar destfile="${minecraft.mcp.jar}">
+            <fileset dir="${mcp.dir}/bin/minecraft"/>
+        </jar>
+    </target>
+
+    <target name="install-forge" depends="download-forge" unless="forge.installed">
+        <delete dir="${forge.dir}" failonerror="no"/>
+        <delete file="${minecraft.inheritance}" failonerror="no"/>
+        <delete file="${minecraft.mcp.jar}" failonerror="no"/>
+
+        <unzip src="${temp.dir}/${forge.filename}" dest="${forge.dir}">
+            <cutdirsmapper dirs="1"/>
+        </unzip>
+
+        <exec dir="${forge.dir}" executable="${forge.dir}/fml/python/python_fml" osfamily="windows" inputstring="Yes\n">
+            <arg value="install.py"/>
+        </exec>
+        <exec dir="${forge.dir}" executable="python" osfamily="unix" inputstring="Yes\n">
+            <arg value="install.py"/>
+        </exec>
+    </target>
+
+    <target name="download-forge">
+        <mkdir dir="${temp.dir}"/>
+        <get src="${forge.download}" dest="${temp.dir}/${forge.filename}" verbose="true" skipexisting="true"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+</project>
