@@ -22,6 +22,7 @@ public class KeybindToggleRender extends KeyBindingRegistry.KeyHandler {
 
     @Override
     public void keyDown(EnumSet<TickType> types, KeyBinding kb, boolean tickEnd, boolean isRepeat) {
+        if(!tickEnd) return;
         RenderTickHandler.renderPreview = !RenderTickHandler.renderPreview;
     }
 

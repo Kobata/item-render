@@ -80,6 +80,7 @@ public class KeybindRenderInventoryBlock extends KeyBindingRegistry.KeyHandler {
 
     @Override
     public void keyDown(EnumSet<TickType> types, KeyBinding kb, boolean tickEnd, boolean isRepeat) {
+        if(!tickEnd) return;
         Minecraft minecraft = FMLClientHandler.instance().getClient();
         if(minecraft.thePlayer != null) {
             ItemStack current = minecraft.thePlayer.getCurrentEquippedItem();
