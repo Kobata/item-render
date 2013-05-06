@@ -1,4 +1,4 @@
-<project name="KMap" default="dist" basedir=".">
+<project name="modbuild" default="dist" basedir=".">
     <property environment="env"/>
     <property file="build.properties"/>
 
