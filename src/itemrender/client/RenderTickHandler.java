@@ -11,6 +11,7 @@ import java.util.EnumSet;
 @SideOnly(Side.CLIENT)
 public class RenderTickHandler implements ITickHandler {
     public static boolean renderPreview = false;
+    public static KeybindRenderInventoryBlock keybindToRender;
 
     public RenderTickHandler() {
     }
@@ -21,11 +22,11 @@ public class RenderTickHandler implements ITickHandler {
 
     @Override
     public void tickEnd(EnumSet<TickType> type, Object... tickData) {
-        if(renderPreview) {
+        if(keybindToRender != null && renderPreview) {
             int originalTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
 
             // Bind framebuffer texture
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, KeybindRenderInventoryBlock.textureID);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, keybindToRender.textureID);
             GL11.glBegin(GL11.GL_QUADS);
             GL11.glTexCoord2f(0, 0);
             GL11.glVertex2i(0, 0);

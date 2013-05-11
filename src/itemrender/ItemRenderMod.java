@@ -19,6 +19,9 @@ public class ItemRenderMod {
 
     public static boolean gl32_enabled = false;
 
+    public static final int DEFAULT_TEXTURE_SIZE = 128;
+    public static final int GRID_TEXTURE_SIZE = 32;
+
     @Mod.PreInit
     public void preInit(FMLPreInitializationEvent e) {
         gl32_enabled = GLContext.getCapabilities().OpenGL32;
@@ -28,7 +31,10 @@ public class ItemRenderMod {
     public void init(FMLInitializationEvent e) {
         if(gl32_enabled) {
             TickRegistry.registerTickHandler(new RenderTickHandler(), Side.CLIENT);
-            KeyBindingRegistry.registerKeyBinding(new KeybindRenderInventoryBlock());
+            KeybindRenderInventoryBlock defaultRender = new KeybindRenderInventoryBlock(DEFAULT_TEXTURE_SIZE, "");
+            RenderTickHandler.keybindToRender = defaultRender;
+            KeyBindingRegistry.registerKeyBinding(defaultRender);
+            KeyBindingRegistry.registerKeyBinding(new KeybindRenderInventoryBlock(GRID_TEXTURE_SIZE, "_grid"));
             KeyBindingRegistry.registerKeyBinding(new KeybindToggleRender());
         }
     }
