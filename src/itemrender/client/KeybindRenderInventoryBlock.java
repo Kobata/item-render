@@ -34,17 +34,26 @@ public class KeybindRenderInventoryBlock extends KeyBindingRegistry.KeyHandler {
             new KeyBinding[]{new KeyBinding("Render Inventory Block", Keyboard.KEY_P)};
     private static boolean[] repeatings = new boolean[]{false};
 
-    private static final int RENDER_TEXTURE_SIZE = 128;
+    private int renderTextureSize = 128;
 
-    public static int framebufferID = -1;
-    public static int depthbufferID = -1;
-    public static int textureID = -1;
+    public int framebufferID = -1;
+    public int depthbufferID = -1;
+    public int textureID = -1;
+
+    private String filenameSuffix = "";
 
     private RenderItem itemRenderer = new RenderItem();
 
-    public KeybindRenderInventoryBlock() {
+    public KeybindRenderInventoryBlock(int textureSize, String filename_suffix) {
         super(keyBindings, repeatings);
 
+        renderTextureSize = textureSize;
+        filenameSuffix = filename_suffix;
+
+        createFramebuffer();
+    }
+
+    private void createFramebuffer() {
         framebufferID = GL30.glGenFramebuffers();
         textureID = GL11.glGenTextures();
         int currentTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
@@ -57,7 +66,7 @@ public class KeybindRenderInventoryBlock extends KeyBindingRegistry.KeyHandler {
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, RENDER_TEXTURE_SIZE, RENDER_TEXTURE_SIZE, 0, GL12.GL_BGRA,
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, renderTextureSize, renderTextureSize, 0, GL12.GL_BGRA,
                           GL11.GL_UNSIGNED_BYTE, (java.nio.ByteBuffer) null);
 
         // Restore old texture
@@ -66,7 +75,7 @@ public class KeybindRenderInventoryBlock extends KeyBindingRegistry.KeyHandler {
         // Create depth buffer
         depthbufferID = GL30.glGenRenderbuffers();
         GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, depthbufferID);
-        GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL11.GL_DEPTH_COMPONENT, RENDER_TEXTURE_SIZE, RENDER_TEXTURE_SIZE);
+        GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL11.GL_DEPTH_COMPONENT, renderTextureSize, renderTextureSize);
 
         // Bind depth buffer to the framebuffer
         GL30.glFramebufferRenderbuffer(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, GL30.GL_RENDERBUFFER, depthbufferID);
@@ -76,6 +85,18 @@ public class KeybindRenderInventoryBlock extends KeyBindingRegistry.KeyHandler {
 
         // Revert to default framebuffer
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+    }
+
+    private void deleteFramebuffer() {
+        GL30.glDeleteFramebuffers(framebufferID);
+        GL11.glDeleteTextures(textureID);
+        GL30.glDeleteRenderbuffers(depthbufferID);
+    }
+
+    public void resizeFramebuffer(int newSize) {
+        deleteFramebuffer();
+        renderTextureSize = newSize;
+        createFramebuffer();
     }
 
     @Override
@@ -91,7 +112,7 @@ public class KeybindRenderInventoryBlock extends KeyBindingRegistry.KeyHandler {
                 // Remember viewport info.
                 IntBuffer viewportInfo = GLAllocation.createDirectIntBuffer(16);
                 GL11.glGetInteger(GL11.GL_VIEWPORT, viewportInfo);
-                GL11.glViewport(0, 0, RENDER_TEXTURE_SIZE, RENDER_TEXTURE_SIZE);
+                GL11.glViewport(0, 0, renderTextureSize, renderTextureSize);
 
                 GL11.glMatrixMode(GL11.GL_PROJECTION);
                 GL11.glPushMatrix();
@@ -149,16 +170,16 @@ public class KeybindRenderInventoryBlock extends KeyBindingRegistry.KeyHandler {
 
                 IntBuffer texture = BufferUtils.createIntBuffer(width * height);
                 GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, texture);
-                //GL11.glReadPixels(0, 0, RENDER_TEXTURE_SIZE, RENDER_TEXTURE_SIZE, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, texture);
+                //GL11.glReadPixels(0, 0, renderTextureSize, renderTextureSize, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, texture);
                 int[] texture_array = new int[width * height];
                 texture.get(texture_array);
 
                 BufferedImage image =
-                        new BufferedImage(RENDER_TEXTURE_SIZE, RENDER_TEXTURE_SIZE, BufferedImage.TYPE_INT_ARGB);
-                image.setRGB(0, 0, RENDER_TEXTURE_SIZE, RENDER_TEXTURE_SIZE, texture_array, 0, width);
+                        new BufferedImage(renderTextureSize, renderTextureSize, BufferedImage.TYPE_INT_ARGB);
+                image.setRGB(0, 0, renderTextureSize, renderTextureSize, texture_array, 0, width);
 
                 File file = new File(minecraft.mcDataDir,
-                        String.format("rendered/item_%d_%d.png", current.getItem().itemID, current.getItemDamage()));
+                        String.format("rendered/item_%d_%d%s.png", current.getItem().itemID, current.getItemDamage(), filenameSuffix));
                 file.mkdirs();
                 try {
                     ImageIO.write(image, "png", file);
