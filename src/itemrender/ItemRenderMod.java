@@ -22,12 +22,12 @@ public class ItemRenderMod {
     public static final int DEFAULT_TEXTURE_SIZE = 128;
     public static final int GRID_TEXTURE_SIZE = 32;
 
-    @Mod.PreInit
+    @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
         gl32_enabled = GLContext.getCapabilities().OpenGL32;
     }
 
-    @Mod.Init
+    @Mod.EventHandler
     public void init(FMLInitializationEvent e) {
         if(gl32_enabled) {
             TickRegistry.registerTickHandler(new RenderTickHandler(), Side.CLIENT);
@@ -39,7 +39,7 @@ public class ItemRenderMod {
         }
     }
 
-    @Mod.PostInit
+    @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent e) {
     }
 }
