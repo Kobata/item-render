@@ -8,7 +8,7 @@
 
     <property name="minecraft.version" value="1.6.2"/>
 
-    <property name="forge.build" value="784"/>
+    <property name="forge.build" value="828"/>
     <property name="forge.version" value="9.10.0"/>
     <property name="forge.filename" value="minecraftforge-src-${minecraft.version}-${forge.version}.${forge.build}.zip"/>
 
@@ -69,7 +69,7 @@
         <pathelement location="${mcp.dir}\jars\libraries\org\bouncycastle\bcprov-jdk15on\1.47\bcprov-jdk15on-1.47.jar"/>
         <pathelement location="${mcp.dir}\jars\libraries\org\lwjgl\lwjgl\lwjgl\2.9.0\lwjgl-2.9.0.jar"/>
         <pathelement location="${mcp.dir}\jars\libraries\org\lwjgl\lwjgl\lwjgl_util\2.9.0\lwjgl_util-2.9.0.jar"/>
-        <pathelement location="${mcp.dir}\jars\libraries\org\ow2\asm\asm-all\4.1\asm-all-4.1.jar"/>
+        <pathelement location="${mcp.dir}\jars\libraries\org\ow2\asm\asm-debug-all\4.1\asm-debug-all-4.1.jar"/>
     </path>
 
     <target name="dist" depends="reobf-mod, sign-mod, jar-src"/>
@@ -101,8 +101,6 @@
         <jar destfile="${mod.src.jar}">
             <fileset dir="." includes="${src.orig.dir}/**"/>
             <file file="build.xml"/>
-            <file file="SpecialSource-1.5-SNAPSHOT-shaded.jar"/>
-            <file file="SpecialSource-License.txt"/>
         </jar>
     </target>
 
