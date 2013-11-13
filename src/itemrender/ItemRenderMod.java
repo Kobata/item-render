@@ -10,6 +10,7 @@ import cpw.mods.fml.relauncher.Side;
 import itemrender.client.KeybindRenderInventoryBlock;
 import itemrender.client.KeybindToggleRender;
 import itemrender.client.RenderTickHandler;
+import net.minecraftforge.common.Configuration;
 import org.lwjgl.opengl.GLContext;
 
 @Mod(modid = "@MODID@")
@@ -19,22 +20,28 @@ public class ItemRenderMod {
 
     public static boolean gl32_enabled = false;
 
-    public static final int DEFAULT_TEXTURE_SIZE = 128;
-    public static final int GRID_TEXTURE_SIZE = 32;
+    public static final int DEFAULT_MAIN_TEXTURE_SIZE = 128;
+    public static final int DEFAULT_GRID_TEXTURE_SIZE = 32;
+
+    private int mainTextureSize;
+    private int gridTextureSize;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
         gl32_enabled = GLContext.getCapabilities().OpenGL32;
+        Configuration config = new Configuration(e.getSuggestedConfigurationFile());
+        mainTextureSize = config.get(Configuration.CATEGORY_GENERAL, "mainTextureSize", DEFAULT_MAIN_TEXTURE_SIZE).getInt();
+        gridTextureSize = config.get(Configuration.CATEGORY_GENERAL, "gridTextureSize", DEFAULT_GRID_TEXTURE_SIZE).getInt();
     }
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent e) {
         if(gl32_enabled) {
             TickRegistry.registerTickHandler(new RenderTickHandler(), Side.CLIENT);
-            KeybindRenderInventoryBlock defaultRender = new KeybindRenderInventoryBlock(DEFAULT_TEXTURE_SIZE, "");
+            KeybindRenderInventoryBlock defaultRender = new KeybindRenderInventoryBlock(mainTextureSize, "");
             RenderTickHandler.keybindToRender = defaultRender;
             KeyBindingRegistry.registerKeyBinding(defaultRender);
-            KeyBindingRegistry.registerKeyBinding(new KeybindRenderInventoryBlock(GRID_TEXTURE_SIZE, "_grid"));
+            KeyBindingRegistry.registerKeyBinding(new KeybindRenderInventoryBlock(gridTextureSize, "_grid"));
             KeyBindingRegistry.registerKeyBinding(new KeybindToggleRender());
         }
     }
