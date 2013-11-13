@@ -26,7 +26,7 @@ public class RenderTickHandler implements ITickHandler {
             int originalTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
 
             // Bind framebuffer texture
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, keybindToRender.textureID);
+            keybindToRender.fbo.bind();
             GL11.glBegin(GL11.GL_QUADS);
             GL11.glTexCoord2f(0, 0);
             GL11.glVertex2i(0, 0);
