@@ -46,11 +46,6 @@ public class FBOHelper {
         GL11.glGetInteger(GL11.GL_VIEWPORT, lastViewport);
         GL11.glViewport(0, 0, renderTextureSize, renderTextureSize);
 
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
-        GL11.glOrtho(0, 16, 0, 16, -100.0, 100.0);
-
         GL11.glMatrixMode(GL11.GL_MODELVIEW);
         GL11.glPushMatrix();
         GL11.glLoadIdentity();
@@ -71,8 +66,7 @@ public class FBOHelper {
         GL11.glDisable(GL12.GL_RESCALE_NORMAL);
         GL11.glDisable(GL11.GL_LIGHTING);
 
-        GL11.glPopMatrix();
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
         GL11.glPopMatrix();
 
         // Revert to last viewport

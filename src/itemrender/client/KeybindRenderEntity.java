@@ -8,13 +8,20 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import itemrender.client.rendering.FBOHelper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.EnumMovingObjectType;
 import net.minecraftforge.client.ForgeHooksClient;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
@@ -30,18 +37,16 @@ import java.nio.IntBuffer;
 import java.util.EnumSet;
 
 @SideOnly(Side.CLIENT)
-public class KeybindRenderInventoryBlock extends KeyBindingRegistry.KeyHandler {
+public class KeybindRenderEntity extends KeyBindingRegistry.KeyHandler {
     private static KeyBinding[] keyBindings =
-            new KeyBinding[]{new KeyBinding("Render Inventory Block", Keyboard.KEY_P)};
+            new KeyBinding[]{new KeyBinding("Render Entity", Keyboard.KEY_L)};
     private static boolean[] repeatings = new boolean[]{false};
 
     public FBOHelper fbo;
 
     private String filenameSuffix = "";
 
-    private RenderItem itemRenderer = new RenderItem();
-
-    public KeybindRenderInventoryBlock(int textureSize, String filename_suffix) {
+    public KeybindRenderEntity(int textureSize, String filename_suffix) {
         super(keyBindings, repeatings);
 
         fbo = new FBOHelper(textureSize);
@@ -52,42 +57,41 @@ public class KeybindRenderInventoryBlock extends KeyBindingRegistry.KeyHandler {
     public void keyDown(EnumSet<TickType> types, KeyBinding kb, boolean tickEnd, boolean isRepeat) {
         if(!tickEnd) return;
         Minecraft minecraft = FMLClientHandler.instance().getClient();
-        if(minecraft.thePlayer != null) {
-            ItemStack current = minecraft.thePlayer.getCurrentEquippedItem();
-            if(current != null && current.getItem() != null) {
+        if(minecraft.pointedEntityLiving != null) {
+            EntityLivingBase current = minecraft.pointedEntityLiving;
+            fbo.begin();
 
-                fbo.begin();
+            AxisAlignedBB aabb = current.boundingBox;
+            double minX = aabb.minX - current.posX;
+            double maxX = aabb.maxX - current.posX;
+            double minY = aabb.minY - current.posY;
+            double maxY = aabb.maxY - current.posY;
+            double minZ = aabb.minZ - current.posZ;
+            double maxZ = aabb.maxZ - current.posZ;
 
-                GL11.glMatrixMode(GL11.GL_PROJECTION);
-                GL11.glPushMatrix();
-                GL11.glLoadIdentity();
-                GL11.glOrtho(0, 16, 0, 16, -100.0, 100.0);
+            double minBound = Math.min(minX, Math.min(minY, minZ));
+            double maxBound = Math.max(maxX, Math.max(maxY, maxZ));
 
-                GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            double boundLimit = Math.max(Math.abs(minBound), Math.abs(maxBound));
 
-                RenderHelper.enableGUIStandardItemLighting();
+            GL11.glMatrixMode(GL11.GL_PROJECTION);
+            GL11.glPushMatrix();
+            GL11.glLoadIdentity();
+            GL11.glOrtho(-boundLimit*0.75, boundLimit*0.75, -boundLimit*1.25, boundLimit*0.25, -100.0, 100.0);
 
-                RenderBlocks renderBlocks = ReflectionHelper.getPrivateValue(Render.class, itemRenderer,
-                                                                             "field_76988_d",
-                                                                             "renderBlocks");
-                if(!ForgeHooksClient
-                        .renderInventoryItem(renderBlocks, minecraft.renderEngine, current, true, 0.0f,
-                                             (float) 0, (float) 0)) {
-                    itemRenderer.renderItemIntoGUI(null, minecraft.renderEngine, current, 0, 0);
-                }
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
 
-                GL11.glMatrixMode(GL11.GL_PROJECTION);
-                GL11.glPopMatrix();
+            GuiInventory.func_110423_a(0, 0, 1, 1, 1, current);
 
-                RenderHelper.disableStandardItemLighting();
+            GL11.glMatrixMode(GL11.GL_PROJECTION);
+            GL11.glPopMatrix();
 
-                fbo.end();
+            fbo.end();
 
-                fbo.saveToFile(new File(minecraft.mcDataDir,
-                                        String.format("rendered/item_%d_%d%s.png", current.getItem().itemID, current.getItemDamage(), filenameSuffix)));
+            fbo.saveToFile(new File(minecraft.mcDataDir,
+                                    String.format("rendered/entity_%s%s.png", EntityList.getEntityString(current), filenameSuffix)));
 
-                fbo.restoreTexture();
-            }
+            fbo.restoreTexture();
         }
     }
 

@@ -7,6 +7,7 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
+import itemrender.client.KeybindRenderEntity;
 import itemrender.client.KeybindRenderInventoryBlock;
 import itemrender.client.KeybindToggleRender;
 import itemrender.client.RenderTickHandler;
@@ -48,6 +49,8 @@ public class ItemRenderMod {
             RenderTickHandler.keybindToRender = defaultRender;
             KeyBindingRegistry.registerKeyBinding(defaultRender);
             KeyBindingRegistry.registerKeyBinding(new KeybindRenderInventoryBlock(gridTextureSize, "_grid"));
+            KeyBindingRegistry.registerKeyBinding(new KeybindRenderEntity(mainTextureSize, ""));
+            KeyBindingRegistry.registerKeyBinding(new KeybindRenderEntity(gridTextureSize, "_grid"));
             KeyBindingRegistry.registerKeyBinding(new KeybindToggleRender());
         } else {
             log.severe("OpenGL 3.2 not detected, mod will not work!");
