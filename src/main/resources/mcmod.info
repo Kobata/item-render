@@ -1,0 +1,21 @@
+[
+{
+    "modid": "itemrender",
+    "name": "ItemRender",
+    "description": "",
+    "mcversion": "$mcversion",
+    "version": "$version",
+    "url": "https://github.com/Kobata/item-render",
+    "updateUrl": "",
+    "authors": [
+        "Kobata"
+    ],
+    "credits": "By Kobata",
+    "logoFile": "",
+    "screenshots": [
+    ],
+    "parent":"",
+    "dependencies": [
+    ]
+}
+]

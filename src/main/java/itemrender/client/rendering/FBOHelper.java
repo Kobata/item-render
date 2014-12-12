@@ -12,7 +12,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.IntBuffer;
 
-public class FBOHelper {
+public final class FBOHelper {
     public int renderTextureSize = 128;
     public int framebufferID = -1;
     public int depthbufferID = -1;
@@ -130,7 +130,7 @@ public class FBOHelper {
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
         GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, renderTextureSize, renderTextureSize, 0, GL12.GL_BGRA,
-                          GL11.GL_UNSIGNED_BYTE, (java.nio.ByteBuffer) null);
+                GL11.GL_UNSIGNED_BYTE, (java.nio.ByteBuffer) null);
 
         // Restore old texture
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, currentTexture);

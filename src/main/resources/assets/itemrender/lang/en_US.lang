@@ -1,0 +1,4 @@
+itemrender.key.category=ItemRender
+itemrender.key.render_item=Render Held Item
+itemrender.key.render_entity=Render Target Entity
+itemrender.key.toggle_preview=Toggle Item Preview

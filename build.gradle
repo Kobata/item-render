@@ -1,0 +1,71 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+    }
+}
+
+apply plugin: 'forge'
+
+if(!mod_version) {
+    mod_version = "UNKNOWN"
+}
+
+ext.build_number = System.getenv("BUILD_NUMBER")
+
+if(build_number)  {
+    version = mod_version + "-" + build_number
+} else {
+    version = mod_version
+}
+group = "itemrender" // No stupid URL conventions
+archivesBaseName = "ItemRender"
+
+ext.mcversion = "1.7.10"
+minecraft {
+    version = "1.7.10-10.13.2.1230"
+}
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+compileJava {
+    options.debug = true
+    options.debugOptions.debugLevel = "source,lines,vars"
+}
+
+task deobfJar(type: Jar) {
+    dependsOn classes
+
+    from sourceSets.main.output
+
+    appendix = 'deobf'
+}
+
+artifacts {
+    archives deobfJar
+}
+
+processResources
+{
+    from(sourceSets.main.resources.srcDirs) {
+        exclude '**/*.png'
+        exclude '**/*_at.cfg'
+
+        expand version: version, mcversion: mcversion
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        include '**/*.png'
+        include '**/*_at.cfg'
+    }
+}

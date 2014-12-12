@@ -1,6 +1,12 @@
 # Builds & binaries
 build/
 bin/
+.gradle/
+run/
+
+# IDE files
+.idea/
+*.iml
 
 # Tmp files
 *~
