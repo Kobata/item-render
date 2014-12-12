@@ -1,21 +1,22 @@
 package itemrender.client;
 
-import cpw.mods.fml.client.FMLClientHandler;
-import cpw.mods.fml.common.registry.GameData;
-import cpw.mods.fml.relauncher.ReflectionHelper;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import itemrender.ItemRenderMod;
+import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.common.registry.GameData;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import itemrender.client.rendering.FBOHelper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.client.ForgeHooksClient;
 import org.lwjgl.opengl.GL11;
 
 import java.io.File;
+import java.nio.FloatBuffer;
 
 @SideOnly(Side.CLIENT)
 public final class KeybindRenderInventoryBlock implements KeybindHandler {
@@ -23,7 +24,7 @@ public final class KeybindRenderInventoryBlock implements KeybindHandler {
 
     private String filenameSuffix = "";
 
-    private RenderItem itemRenderer = new RenderItem();
+    private RenderItem itemRenderer = Minecraft.getMinecraft().getRenderItem();
 
     public KeybindRenderInventoryBlock(int textureSize, String filename_suffix) {
         fbo = new FBOHelper(textureSize);
@@ -39,33 +40,43 @@ public final class KeybindRenderInventoryBlock implements KeybindHandler {
 
                 fbo.begin();
 
-                GL11.glMatrixMode(GL11.GL_PROJECTION);
-                GL11.glPushMatrix();
-                GL11.glLoadIdentity();
-                GL11.glOrtho(0, 16, 0, 16, -100.0, 100.0);
+                GlStateManager.matrixMode(GL11.GL_PROJECTION);
+                GlStateManager.pushMatrix();
+                GlStateManager.loadIdentity();
+                GlStateManager.ortho(0, 16, 16, 0, -100000.0, 100000.0);
 
-                GL11.glMatrixMode(GL11.GL_MODELVIEW);
+                GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+                FloatBuffer matrix = GLAllocation.createDirectFloatBuffer(16);
+
+                matrix.clear();
+
+                matrix.put(new float[] {
+                        1f, 0f, 0f, 0f,
+                        0f, 1f, 0f, 0f,
+                        0f, 0f, -1f, 0f,
+                        0f, 0f, 0f, 1f});
+
+                matrix.rewind();
+
+                //GlStateManager.multMatrix(matrix);
 
                 RenderHelper.enableGUIStandardItemLighting();
+                GlStateManager.enableRescaleNormal();
+                GlStateManager.enableColorMaterial();
+                GlStateManager.enableLighting();
 
-                RenderBlocks renderBlocks = ReflectionHelper.getPrivateValue(Render.class, itemRenderer,
-                        "field_147909_c",
-                        "field_147909_c");
-                if(!ForgeHooksClient
-                        .renderInventoryItem(renderBlocks, minecraft.renderEngine, current, true, 0.0f,
-                                (float) 0, (float) 0)) {
-                    itemRenderer.renderItemIntoGUI(null, minecraft.renderEngine, current, 0, 0);
-                }
+                itemRenderer.func_175042_a(current, 0, 0);
 
-                GL11.glMatrixMode(GL11.GL_PROJECTION);
-                GL11.glPopMatrix();
-
+                GlStateManager.disableLighting();
                 RenderHelper.disableStandardItemLighting();
+
+                GlStateManager.matrixMode(GL11.GL_PROJECTION);
+                GlStateManager.popMatrix();
 
                 fbo.end();
 
                 fbo.saveToFile(new File(minecraft.mcDataDir,
-                        String.format("rendered/item_%s_%d%s.png", GameData.getItemRegistry().getNameForObject(current.getItem()).replace(':', '_'), current.getItemDamage(),
+                        String.format("rendered/item_%s_%d%s.png", GameData.getItemRegistry().getNameForObject(current.getItem()).toString().replace(':', '_'), current.getItemDamage(),
                                 filenameSuffix)));
 
                 fbo.restoreTexture();

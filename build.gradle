@@ -31,9 +31,9 @@ if(build_number)  {
 group = "itemrender" // No stupid URL conventions
 archivesBaseName = "ItemRender"
 
-ext.mcversion = "1.7.10"
+ext.mcversion = "1.8"
 minecraft {
-    version = "1.7.10-10.13.2.1230"
+    version = "1.8-11.14.0.1265-1.8"
 }
 
 sourceCompatibility = 1.6
